@@ -2,7 +2,7 @@ import os
 import re
 from fastapi import FastAPI, HTTPException, Query
 from telethon import TelegramClient
-from fastapi.responses import HTMLResponse, RedirectResponse
+from fastapi.responses import HTMLResponse
 
 API_ID = int(os.environ.get("API_ID"))
 API_HASH = os.environ.get("API_HASH")
@@ -25,25 +25,45 @@ async def embed_player(tmdb_id: str, s: int = Query(None), e: int = Query(None))
     final_link = None
     async for message in client.iter_messages(CHANNEL_ID, search=search_query):
         if message.text:
+            # Caption theke http/https link khunje ber korbe
             found_urls = re.findall(r'(https?://\S+)', message.text)
             if found_urls:
                 final_link = found_urls[0]
                 break
     
     if not final_link:
-        return "<h1>Content Not Found in Telegram!</h1>"
+        return "<body style='background:#000;color:#fff;display:flex;justify-content:center;align-items:center;height:100vh;'><h2>Link not found in Telegram!</h2></body>"
 
-    # Jodi link-er sheshe .mp4 thake, tobe Player-e dekhabo
-    if any(ext in final_link.lower() for ext in ['.mp4', '.mkv', '.m3u8', '.webm']):
-        return f"""
-        <html>
-        <head><script src="https://cdn.jsdelivr.net/npm/artplayer/dist/artplayer.js"></script></head>
-        <body style="margin:0;background:#000;"><div id="player" style="width:100vw;height:100vh;"></div>
+    # Premium ArtPlayer Logic
+    return f"""
+    <!DOCTYPE html>
+    <html>
+    <head>
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <script src="https://cdn.jsdelivr.net/npm/artplayer/dist/artplayer.js"></script>
+        <style>
+            body, html {{ margin: 0; padding: 0; width: 100%; height: 100%; background: #000; overflow: hidden; }}
+            #player {{ width: 100vw; height: 100vh; }}
+        </style>
+    </head>
+    <body>
+        <div id="player"></div>
         <script>
-            new Artplayer({{ container: '#player', url: '{final_link}', fullscreen: true, setting: true }});
+            var art = new Artplayer({{
+                container: '#player',
+                url: '{final_link}',
+                type: 'mp4',
+                fullscreen: true,
+                playbackRate: true,
+                setting: true,
+                pip: true,
+                autoSize: true,
+                autoMini: true,
+                screenshot: true,
+                hotkey: true,
+                lock: true,
+            }});
         </script>
-        </body></html>
-        """
-    else:
-        # Jodi direct link na hoy, tobe sorasori oi link-e Redirect korbe
-        return RedirectResponse(url=final_link)
+    </body>
+    </html>
+    """
