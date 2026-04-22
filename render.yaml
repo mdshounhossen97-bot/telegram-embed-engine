@@ -1,0 +1,15 @@
+services:
+  - type: web
+    name: tg-embed-engine
+    env: python
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn main:app --host 0.0.0.0 --port $PORT
+    envVars:
+      - key: API_ID
+        value: 35287172
+      - key: API_HASH
+        value: 9ddeecf87764016243ea17968ba93983
+      - key: BOT_TOKEN
+        value: 8352515561:AAEstfiEjppZ8HKVOloTahQnI5yRFYVmJ60
+      - key: CHANNEL_ID
+        value: -1002360555700
